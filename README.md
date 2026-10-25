@@ -33,7 +33,7 @@ Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/Sri7580/urja-meter-api.git
-cd urja-meter-api-node
+cd urja-meter-api
 npm install
 ```
 
