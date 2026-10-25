@@ -32,7 +32,7 @@ A Node.js and Express REST API wrapper for the Urja Operations Portal. It expose
 Clone the repository and install dependencies:
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/Sri7580/urja-meter-api.git
 cd urja-meter-api-node
 npm install
 ```
@@ -200,3 +200,8 @@ The OpenAPI specification is available in [`openapi.json`](./openapi.json).
 ## Engineering Notes
 
 The wrapper currently forwards the upstream JSON responses rather than transforming them into a new domain model. This keeps the implementation small and reduces assumptions about the legacy portal's response structure.
+
+## Reflection
+
+See [REFLECTION.md](./REFLECTION.md) for my reflections on assumptions,
+challenges, mistakes, and potential improvements.
