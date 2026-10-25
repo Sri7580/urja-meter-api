@@ -1,0 +1,461 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Urja Meter API",
+    "version": "1.0.0",
+    "description": "A read-only REST API wrapper for the Urja Operations Portal."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Check API health",
+        "responses": {
+          "200": {
+            "description": "API is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters": {
+      "get": {
+        "summary": "Search meters",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            },
+            "description": "Meter search query"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meter search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeterSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
+    "/api/v1/transformers": {
+      "get": {
+        "summary": "List distribution transformers",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Page number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transformer records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransformerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
+    "/api/v1/meters/{meterId}/energy": {
+      "get": {
+        "summary": "Get meter energy readings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/MeterId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Energy readings from the portal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnergyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    },
+    "/api/v1/meters/{meterId}/geo": {
+      "get": {
+        "summary": "Get meter geographic location",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/MeterId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Meter geographic coordinates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "502": {
+            "$ref": "#/components/responses/UpstreamError"
+          },
+          "504": {
+            "$ref": "#/components/responses/GatewayTimeout"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "parameters": {
+      "MeterId": {
+        "name": "meterId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9-]{1,50}$"
+        },
+        "description": "Meter identifier"
+      }
+    },
+    "responses": {
+      "GatewayTimeout": {
+        "description": "The upstream portal request exceeded the configured timeout",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "The Urja portal request timed out"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid request parameters",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "example": {
+              "error": "Invalid meter ID"
+            }
+          }
+        }
+      },
+      "UpstreamError": {
+        "description": "The upstream portal request failed",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/UpstreamErrorResponse"
+            },
+            "examples": {
+              "generalFailure": {
+                "summary": "Upstream request failed",
+                "value": {
+                  "error": "Unable to retrieve data from the Urja portal (Meter search)"
+                }
+              },
+              "sessionRejected": {
+                "summary": "Portal rejected the session",
+                "value": {
+                  "error": "The Urja portal rejected the request. The session may have expired."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "message": {
+            "type": "string",
+            "example": "Urja Meter API is running"
+          }
+        },
+        "required": [
+          "status",
+          "message"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "UpstreamErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "A safe description of the upstream failure"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "additionalProperties": false
+      },
+      "Meter": {
+        "type": "object",
+        "properties": {
+          "meterId": {
+            "type": "string",
+            "example": "J100010"
+          },
+          "serialNo": {
+            "type": "string",
+            "example": "GE98722"
+          },
+          "make": {
+            "type": "string",
+            "example": "Secure"
+          },
+          "phaseType": {
+            "type": "string",
+            "example": "single"
+          },
+          "installStatus": {
+            "type": "string",
+            "example": "Faulty"
+          },
+          "dtCode": {
+            "type": "string",
+            "example": "DT-011"
+          }
+        },
+        "description": "Meter record fields observed from the portal"
+      },
+      "MeterSearchResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Meter"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "example": 1
+          },
+          "page": {
+            "type": "integer",
+            "example": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "example": 20
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "Transformer": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "DT-001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Malviya Nagar DT 1"
+          },
+          "feederCode": {
+            "type": "string",
+            "example": "F-001"
+          },
+          "capacityKva": {
+            "type": "number",
+            "example": 100
+          }
+        },
+        "description": "Transformer record fields observed from the portal; confirm field types against a current response"
+      },
+      "TransformerResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Transformer"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "description": "Observed response shape; confirm against a current successful portal response"
+      },
+      "EnergyReading": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "description": "Reading timestamp in DD/MM/YYYY HH:mm format",
+            "example": "24/06/2026 00:00"
+          },
+          "kwh": {
+            "type": "string",
+            "description": "Cumulative energy reading in kWh",
+            "example": "48439.16"
+          },
+          "kvah": {
+            "type": "string",
+            "description": "Cumulative energy reading in kVAh",
+            "example": "52314.29"
+          },
+          "voltR": {
+            "type": "string",
+            "description": "R-phase voltage reading",
+            "example": "229"
+          }
+        },
+        "required": [
+          "timestamp",
+          "kwh",
+          "kvah",
+          "voltR"
+        ]
+      },
+      "EnergyResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnergyReading"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "GeoCoordinates": {
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "type": "string",
+            "example": "26.938961002479868"
+          },
+          "longitude": {
+            "type": "string",
+            "example": "75.83095696146852"
+          }
+        },
+        "required": [
+          "latitude",
+          "longitude"
+        ]
+      },
+      "GeoResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/GeoCoordinates"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      }
+    }
+  }
+}
